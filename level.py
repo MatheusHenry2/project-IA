@@ -1,17 +1,16 @@
+import numpy as np
+from random import randint
+from time import sleep
+from os import system, name
 import logging
-import numpy as np 
+import numpy as np
 
 logging.basicConfig(
-    level = logging.DEBUG,
+    level=logging.DEBUG,
     filename='mylog.log',
     filemode='w'
 )
 
-
-from os import system, name
-from time import sleep
-from random import randint
-import numpy as np
 
 SPEED = 4
 SLEEP = 1/SPEED
@@ -44,6 +43,7 @@ P7_COLOR = '\033[1m'
 P8_COLOR = '\033[4m'
 NO_COLOR = '\033[0m'
 
+
 class Level:
     def __init__(self, width, height, wprob, gprob):
         self.clear()
@@ -51,20 +51,19 @@ class Level:
         self.height = height
         self.level = []
         self.agents = []
-        for y in range(0,height):
+        for y in range(0, height):
             coll = []
-            for x in range(0,width):
+            for x in range(0, width):
                 if x == 0 or x == (width - 1) or y == 0 or y == (height - 1):
                     coll.append(WALL)
-                elif randint(0,100) <= wprob:
+                elif randint(0, 100) <= wprob:
                     coll.append(WALL)
-                elif randint(0,100) <= gprob:
+                elif randint(0, 100) <= gprob:
                     coll.append(GARBAGE)
                 else:
                     coll.append(EMPTY)
 
             self.level.append(coll)
-
 
     def gotoxy(self, x, y):
         print("%c[%d;%df" % (0x1B, y, x), end='')
@@ -81,8 +80,8 @@ class Level:
 
     def addAgent(self, agent):
         while (True):
-            x = randint(0,self.width - 1)
-            y = randint(0,self.height - 1)
+            x = randint(0, self.width - 1)
+            y = randint(0, self.height - 1)
 
             if self.level[y][x] in (EMPTY, GARBAGE):
                 self.level[y][x] = HOME
@@ -90,7 +89,7 @@ class Level:
                 agent.Draw()
                 break
 
-        self.agents.append(agent);
+        self.agents.append(agent)
 
     def run(self):
         while (True):
@@ -105,11 +104,12 @@ class Level:
             sleep(SLEEP)
 
     def draw(self):
-        self.gotoxy(0,0)
+        self.gotoxy(0, 0)
         for y in range(0, self.height):
-            for x in range(0,self.width):
-                print(self.level[y][x],end="")
+            for x in range(0, self.width):
+                print(self.level[y][x], end="")
             print("")
+
 
 class VacuumCleanerAgent:
     def __init__(self, brain, color):
@@ -156,11 +156,13 @@ class VacuumCleanerAgent:
         py = self.y
 
         perception = [
-            [self.level[py - 1][px - 1], self.level[py - 1][px], self.level[py - 1][px + 1]],
-            [self.level[py    ][px - 1], self.level[py    ][px], self.level[py    ][px + 1]],
-            [self.level[py + 1][px - 1], self.level[py + 1][px], self.level[py + 1][px + 1]]
+            [self.level[py - 1][px - 1], self.level[py - 1]
+                [px], self.level[py - 1][px + 1]],
+            [self.level[py][px - 1], self.level[py][px], self.level[py][px + 1]],
+            [self.level[py + 1][px - 1], self.level[py + 1]
+                [px], self.level[py + 1][px + 1]]
         ]
-
+   
         action = self.brain.NextAction(perception)
         if (action == PICK_UP):
             if (self.full == False and self.level[py][px] == GARBAGE):
@@ -171,33 +173,52 @@ class VacuumCleanerAgent:
                 self.full = False
                 self.score += 1
         else:
-            self.Move(action);
+            self.Move(action)
+
 
 class Brain:
     def __init__(self):
         self.loaded = False
 
     mapa = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' ']]
-    def NextAction(self,perception):
+
+    def NextAction(self, perception):
 
         # Percepções é uma matrix 3x3 com os dados que estão ao redor do VaccumCleaner
         # GARBAGE, WALL, EMPTY, HOME ou outro jogador (LEFT, UP, DOWN, RIGHT)
 
         # Lista de ações possíveis
         # UP, DOWN, LEFT, RIGHT, PICK_UP, DISCARD
-
-
-        #logging.info("testando")
-
-        #self.mapa.insert(0, [1,2,3])
-       
+        
         for i in self.mapa:
             logging.info(i)
-        
+
         logging.info(' \n')
+
+        if (perception[0][1] == EMPTY and perception[0][0] == EMPTY and perception[0][2] == EMPTY):
+            self.mapa.insert(0, [EMPTY, EMPTY, EMPTY]) # - - -
         
-        if(perception[0][1] == EMPTY):
-            self.mapa.insert(0, [' ',1,1])
+        if (perception[0][1] == GARBAGE and perception[0][0] == GARBAGE and perception[0][2] == GARBAGE):
+            self.mapa.insert(0, ['*', '*', '*']) # * * *
+        
+        if (perception[0][1] == WALL and perception[0][0] == WALL and perception[0][2] == WALL):
+            self.mapa.insert(0, ['W', 'W', 'W']) # w w w
+
+        if (perception[0][1] == EMPTY and perception[0][0] == EMPTY and perception[0][2] == WALL):
+            self.mapa.insert(0, [EMPTY, EMPTY, 'W']) # - - w
+
+        if (perception[0][1] == EMPTY and perception[0][0] == WALL and perception[0][2] == EMPTY):
+            self.mapa.insert(0, [EMPTY, 'W', EMPTY]) # - w -
+
+        if (perception[0][1] == WALL and perception[0][0] == EMPTY and perception[0][2] == EMPTY):
+            self.mapa.insert(0, ['W', EMPTY, EMPTY]) # w - -
+
+
+        if (perception[0][1] == GARBAGE and perception[0][0] == GARBAGE and perception[0][2] == EMPTY):
+            self.mapa.insert(0, ['*', '*', EMPTY])
+
+        if (perception[0][1] == GARBAGE and perception[0][0] == EMPTY and perception[0][2] == EMPTY):
+            self.mapa.insert(0, ['*', EMPTY, EMPTY])
 
         return UP
         # if (perception[1][1] == GARBAGE):
@@ -211,11 +232,12 @@ class Brain:
         #         return DOWN
         # return UP
 
+
 class Brain2:
     def __init__(self):
         self.loaded = False
 
-    def NextAction(self,perception):
+    def NextAction(self, perception):
         # Percepções é uma matrix 3x3 com os dados que estão ao redor do VaccumCleaner
         # GARBAGE, WALL, EMPTY, HOME ou outro jogador (LEFT, UP, DOWN, RIGHT)
 
@@ -232,11 +254,12 @@ class Brain2:
                 return LEFT
         return RIGHT
 
+
 class Brain3:
     def __init__(self):
         self.loaded = False
 
-    def NextAction(self,perception):
+    def NextAction(self, perception):
         # Percepções é uma matrix 3x3 com os dados que estão ao redor do VaccumCleaner
         # GARBAGE, WALL, EMPTY, HOME ou outro jogador (LEFT, UP, DOWN, RIGHT)
 
@@ -253,11 +276,12 @@ class Brain3:
                 return RIGHT
         return LEFT
 
+
 class Brain4:
     def __init__(self):
         self.loaded = False
 
-    def NextAction(self,perception):
+    def NextAction(self, perception):
         # Percepções é uma matrix 3x3 com os dados que estão ao redor do VaccumCleaner
         # GARBAGE, WALL, EMPTY, HOME ou outro jogador (LEFT, UP, DOWN, RIGHT)
 
@@ -273,6 +297,7 @@ class Brain4:
             else:
                 return UP
         return DOWN
+
 
 level = Level(LEVEL_WIDTH, LEVEL_HEIGHT, WALL_PROBABILITY, GARBAGE_PROBABILITY)
 level.addAgent(VacuumCleanerAgent(Brain(), P1_COLOR))
