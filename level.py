@@ -162,7 +162,7 @@ class VacuumCleanerAgent:
             [self.level[py + 1][px - 1], self.level[py + 1]
                 [px], self.level[py + 1][px + 1]]
         ]
-   
+
         action = self.brain.NextAction(perception)
         if (action == PICK_UP):
             if (self.full == False and self.level[py][px] == GARBAGE):
@@ -180,7 +180,7 @@ class Brain:
     def __init__(self):
         self.loaded = False
 
-    mapa = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' ']]
+    mapa = [[' ', ' ', ' '], [' ', 'H', ' '], [' ', ' ', ' ']]
 
     def NextAction(self, perception):
 
@@ -189,36 +189,37 @@ class Brain:
 
         # Lista de ações possíveis
         # UP, DOWN, LEFT, RIGHT, PICK_UP, DISCARD
+
+
+        mapaPosition00 = perception[0][0]
+        mapaPosition01 = perception[0][1]
+        mapaPosition02 = perception[0][2]
+
+        # if(mapaPosition00 == WALL and mapaPosition01 == WALL and mapaPosition02 == WALL):
+        #     return DOWN
+
+        if(mapaPosition00 == GARBAGE):
+            mapaPosition00 = '*'
+        if(mapaPosition01 == GARBAGE):
+            mapaPosition01 = '*'
+        if(mapaPosition02 == GARBAGE):
+            mapaPosition02 = '*'
         
+        if(mapaPosition00 == WALL):
+            mapaPosition00 = '_'
+        if(mapaPosition01 == WALL):
+            mapaPosition01 = '_'
+        if(mapaPosition02 == WALL):
+            mapaPosition02 = '_'
+        
+        logging.info('\n')
+
+        self.mapa.insert(0, [mapaPosition00, mapaPosition01, mapaPosition02])
+
         for i in self.mapa:
             logging.info(i)
 
-        logging.info(' \n')
-
-        if (perception[0][1] == EMPTY and perception[0][0] == EMPTY and perception[0][2] == EMPTY):
-            self.mapa.insert(0, [EMPTY, EMPTY, EMPTY]) # - - -
-        
-        if (perception[0][1] == GARBAGE and perception[0][0] == GARBAGE and perception[0][2] == GARBAGE):
-            self.mapa.insert(0, ['*', '*', '*']) # * * *
-        
-        if (perception[0][1] == WALL and perception[0][0] == WALL and perception[0][2] == WALL):
-            self.mapa.insert(0, ['W', 'W', 'W']) # w w w
-
-        if (perception[0][1] == EMPTY and perception[0][0] == EMPTY and perception[0][2] == WALL):
-            self.mapa.insert(0, [EMPTY, EMPTY, 'W']) # - - w
-
-        if (perception[0][1] == EMPTY and perception[0][0] == WALL and perception[0][2] == EMPTY):
-            self.mapa.insert(0, [EMPTY, 'W', EMPTY]) # - w -
-
-        if (perception[0][1] == WALL and perception[0][0] == EMPTY and perception[0][2] == EMPTY):
-            self.mapa.insert(0, ['W', EMPTY, EMPTY]) # w - -
-
-
-        if (perception[0][1] == GARBAGE and perception[0][0] == GARBAGE and perception[0][2] == EMPTY):
-            self.mapa.insert(0, ['*', '*', EMPTY])
-
-        if (perception[0][1] == GARBAGE and perception[0][0] == EMPTY and perception[0][2] == EMPTY):
-            self.mapa.insert(0, ['*', EMPTY, EMPTY])
+        logging.info('\n')
 
         return UP
         # if (perception[1][1] == GARBAGE):
