@@ -180,7 +180,7 @@ class Brain:
     def __init__(self):
         self.loaded = False
 
-    mapa = [[' ', ' ', ' '], [' ', 'H', ' '], [' ', ' ', ' ']]
+    mapa = [[' ', ' ', ' '], [' ', 'H', ' ']]
 
     def NextAction(self, perception):
 
@@ -190,13 +190,18 @@ class Brain:
         # Lista de ações possíveis
         # UP, DOWN, LEFT, RIGHT, PICK_UP, DISCARD
 
-
         mapaPosition00 = perception[0][0]
         mapaPosition01 = perception[0][1]
         mapaPosition02 = perception[0][2]
 
         # if(mapaPosition00 == WALL and mapaPosition01 == WALL and mapaPosition02 == WALL):
         #     return DOWN
+        
+        if  mapaPosition00 == WALL and mapaPosition01 == WALL and mapaPosition02 == WALL:
+            while perception[1][1] != 'H':
+                return DOWN
+
+            
 
         if(mapaPosition00 == GARBAGE):
             mapaPosition00 = '*'
