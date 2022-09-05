@@ -1,15 +1,6 @@
-import numpy as np
-from random import randint
-from time import sleep
 from os import system, name
-import logging
-import numpy as np
-
-logging.basicConfig(
-    level=logging.DEBUG,
-    filename='mylog.log',
-    filemode='w'
-)
+from time import sleep
+from random import randint
 
 
 SPEED = 4
@@ -43,7 +34,6 @@ P7_COLOR = '\033[1m'
 P8_COLOR = '\033[4m'
 NO_COLOR = '\033[0m'
 
-
 class Level:
     def __init__(self, width, height, wprob, gprob):
         self.clear()
@@ -51,19 +41,20 @@ class Level:
         self.height = height
         self.level = []
         self.agents = []
-        for y in range(0, height):
+        for y in range(0,height):
             coll = []
-            for x in range(0, width):
+            for x in range(0,width):
                 if x == 0 or x == (width - 1) or y == 0 or y == (height - 1):
                     coll.append(WALL)
-                elif randint(0, 100) <= wprob:
+                elif randint(0,100) <= wprob:
                     coll.append(WALL)
-                elif randint(0, 100) <= gprob:
+                elif randint(0,100) <= gprob:
                     coll.append(GARBAGE)
                 else:
                     coll.append(EMPTY)
 
             self.level.append(coll)
+
 
     def gotoxy(self, x, y):
         print("%c[%d;%df" % (0x1B, y, x), end='')
@@ -80,8 +71,8 @@ class Level:
 
     def addAgent(self, agent):
         while (True):
-            x = randint(0, self.width - 1)
-            y = randint(0, self.height - 1)
+            x = randint(0,self.width - 1)
+            y = randint(0,self.height - 1)
 
             if self.level[y][x] in (EMPTY, GARBAGE):
                 self.level[y][x] = HOME
@@ -89,7 +80,7 @@ class Level:
                 agent.Draw()
                 break
 
-        self.agents.append(agent)
+        self.agents.append(agent);
 
     def run(self):
         while (True):
@@ -104,12 +95,11 @@ class Level:
             sleep(SLEEP)
 
     def draw(self):
-        self.gotoxy(0, 0)
+        self.gotoxy(0,0)
         for y in range(0, self.height):
-            for x in range(0, self.width):
-                print(self.level[y][x], end="")
+            for x in range(0,self.width):
+                print(self.level[y][x],end="")
             print("")
-
 
 class VacuumCleanerAgent:
     def __init__(self, brain, color):
@@ -156,11 +146,9 @@ class VacuumCleanerAgent:
         py = self.y
 
         perception = [
-            [self.level[py - 1][px - 1], self.level[py - 1]
-                [px], self.level[py - 1][px + 1]],
-            [self.level[py][px - 1], self.level[py][px], self.level[py][px + 1]],
-            [self.level[py + 1][px - 1], self.level[py + 1]
-                [px], self.level[py + 1][px + 1]]
+            [self.level[py - 1][px - 1], self.level[py - 1][px], self.level[py - 1][px + 1]],
+            [self.level[py    ][px - 1], self.level[py    ][px], self.level[py    ][px + 1]],
+            [self.level[py + 1][px - 1], self.level[py + 1][px], self.level[py + 1][px + 1]]
         ]
 
         action = self.brain.NextAction(perception)
@@ -173,77 +161,79 @@ class VacuumCleanerAgent:
                 self.full = False
                 self.score += 1
         else:
-            self.Move(action)
-
+            self.Move(action);
 
 class Brain:
-    def __init__(self):
+    def _init_(self):
         self.loaded = False
-
-    mapa = [[' ', ' ', ' '], [' ', 'H', ' ']]
-
-    def NextAction(self, perception):
-
+    
+    mapa = [['0' for i in range(11)] for j in range (11)]
+    linhaAtualMapa = 5
+    colunaAtualMapa = 5
+    posicaoDaCasaInicio = 0
+    def NextAction(self,perception):
         # Percepções é uma matrix 3x3 com os dados que estão ao redor do VaccumCleaner
         # GARBAGE, WALL, EMPTY, HOME ou outro jogador (LEFT, UP, DOWN, RIGHT)
 
         # Lista de ações possíveis
         # UP, DOWN, LEFT, RIGHT, PICK_UP, DISCARD
 
-        mapaPosition00 = perception[0][0]
-        mapaPosition01 = perception[0][1]
-        mapaPosition02 = perception[0][2]
+        if(self.posicaoDaCasaInicio == 0): # 1 interação colocando a home na posicao central da matriz!
+            self.mapa[self.linhaAtualMapa][self.colunaAtualMapa] = perception[1][1]
+            self.posicaoDaCasaInicio = 1
 
-        # if(mapaPosition00 == WALL and mapaPosition01 == WALL and mapaPosition02 == WALL):
-        #     return DOWN
-        
-        if  mapaPosition00 == WALL and mapaPosition01 == WALL and mapaPosition02 == WALL:
-            while perception[1][1] != 'H':
-                return DOWN
+        else:
+            self.mapa[self.linhaAtualMapa][self.colunaAtualMapa] = perception[1][1] # posicao atual encaixando na matriz
 
+            ## Mapeando possiveis paredes no mapa e inserindo no MAPA!
+
+            if perception[0][1] == WALL: # Verificando se tem uma parede em cima dela!
+                self.mapa[self.linhaAtualMapa - 1][self.colunaAtualMapa] = WALL
             
+            if perception[2][1] == WALL: # Verificando se tem parede abaixo dele!
+                self.mapa[self.linhaAtualMapa + 1][self.colunaAtualMapa] = WALL
+            
+            if perception[1][0] == WALL: # Verificando se tem parede na esquerda dele!
+                self.mapa[self.linhaAtualMapa][self.colunaAtualMapa - 1] = WALL
+            
+            if perception[1][2] == WALL: #Verificando se tem parede na direita dela!
+                self.mapa[self.linhaAtualMapa][self.colunaAtualMapa + 1] = WALL
 
-        if(mapaPosition00 == GARBAGE):
-            mapaPosition00 = '*'
-        if(mapaPosition01 == GARBAGE):
-            mapaPosition01 = '*'
-        if(mapaPosition02 == GARBAGE):
-            mapaPosition02 = '*'
+        linhas = len(self.mapa)
+        colunas = len(self.mapa[0])
+
+        for i in range(linhas):
+            for j in range(colunas):
+                if(self.mapa[i][j] != '0'):
+                    if(j == colunas - 1):
+                        print("%s" %self.mapa[i][j], end = " ")
+                    else:
+                        print("%s" %self.mapa[i][j], end = " ")
+            print()
+
+        movimentoCarrinhoSorteado = randint(1,4) # 1 para cima  # 2 para baixo # 3 para esquerda # 4 para direita
+
+        if(movimentoCarrinhoSorteado == 1):
+            self.linhaAtualMapa = self.linhaAtualMapa + 1
+            return UP
         
-        if(mapaPosition00 == WALL):
-            mapaPosition00 = '_'
-        if(mapaPosition01 == WALL):
-            mapaPosition01 = '_'
-        if(mapaPosition02 == WALL):
-            mapaPosition02 = '_'
+        elif(movimentoCarrinhoSorteado == 2):
+            self.linhaAtualMapa = self.linhaAtualMapa - 1
+            return DOWN
         
-        logging.info('\n')
-
-        self.mapa.insert(0, [mapaPosition00, mapaPosition01, mapaPosition02])
-
-        for i in self.mapa:
-            logging.info(i)
-
-        logging.info('\n')
-
-        return UP
-        # if (perception[1][1] == GARBAGE):
-        #     self.loaded = True
-        #     return PICK_UP
-        # elif (self.loaded):
-        #     if (perception[1][1] == HOME):
-        #         self.loaded = False
-        #         return DISCARD
-        #     else:
-        #         return DOWN
-        # return UP
-
+        elif(movimentoCarrinhoSorteado == 3):
+            self.colunaAtualMapa = self.colunaAtualMapa - 1
+            return LEFT
+        
+        elif(movimentoCarrinhoSorteado == 4):
+            self.colunaAtualMapa = self.colunaAtualMapa + 1
+            return RIGHT
 
 class Brain2:
     def __init__(self):
         self.loaded = False
 
-    def NextAction(self, perception):
+    def NextAction(self,perception):
         # Percepções é uma matrix 3x3 com os dados que estão ao redor do VaccumCleaner
         # GARBAGE, WALL, EMPTY, HOME ou outro jogador (LEFT, UP, DOWN, RIGHT)
 
@@ -260,12 +250,11 @@ class Brain2:
                 return LEFT
         return RIGHT
 
-
 class Brain3:
     def __init__(self):
         self.loaded = False
 
-    def NextAction(self, perception):
+    def NextAction(self,perception):
         # Percepções é uma matrix 3x3 com os dados que estão ao redor do VaccumCleaner
         # GARBAGE, WALL, EMPTY, HOME ou outro jogador (LEFT, UP, DOWN, RIGHT)
 
@@ -282,12 +271,11 @@ class Brain3:
                 return RIGHT
         return LEFT
 
-
 class Brain4:
     def __init__(self):
         self.loaded = False
 
-    def NextAction(self, perception):
+    def NextAction(self,perception):
         # Percepções é uma matrix 3x3 com os dados que estão ao redor do VaccumCleaner
         # GARBAGE, WALL, EMPTY, HOME ou outro jogador (LEFT, UP, DOWN, RIGHT)
 
@@ -303,7 +291,6 @@ class Brain4:
             else:
                 return UP
         return DOWN
-
 
 level = Level(LEVEL_WIDTH, LEVEL_HEIGHT, WALL_PROBABILITY, GARBAGE_PROBABILITY)
 level.addAgent(VacuumCleanerAgent(Brain(), P1_COLOR))
