@@ -164,13 +164,15 @@ class VacuumCleanerAgent:
             self.Move(action);
 
 class Brain:
-    def _init_(self):
+    def init(self):
         self.loaded = False
     
-    mapa = [['0' for i in range(21)] for j in range (21)]
-    linhaAtualMapa = 10
-    colunaAtualMapa = 10
+    mapa = [['0' for i in range(50)] for j in range (50)]
+    linhaAtualMapa = 25
+    colunaAtualMapa = 25
     posicaoDaCasaInicio = 0
+    pilhaMovimentos = []
+    carregandoLixo = False
     def NextAction(self,perception):
         # Percepções é uma matrix 3x3 com os dados que estão ao redor do VaccumCleaner
         # GARBAGE, WALL, EMPTY, HOME ou outro jogador (LEFT, UP, DOWN, RIGHT)
@@ -181,32 +183,42 @@ class Brain:
         if(self.posicaoDaCasaInicio == 0): # 1 interação colocando a home na posicao central da matriz!
             self.mapa[self.linhaAtualMapa][self.colunaAtualMapa] = perception[1][1]
             self.posicaoDaCasaInicio = 1
+        
+
+        if(perception[1][1] == HOME and self.carregandoLixo):
+            self.carregandoLixo = False
+            return DISCARD
+        
+        if(self.carregandoLixo):
+            return self.pilhaMovimentos.pop()
 
         else: # Nesse caso da entrada do Else não é a 1 repetição do looping
 
-            if perception[1][1] == GARBAGE:
-                self.mapa[self.linhaAtualMapa][self.colunaAtualMapa] = '*' # posicao atual encaixando na matriz
-
+            
+            if perception[1][1] == GARBAGE: # posicao atual encaixando na matriz
+                self.mapa[self.linhaAtualMapa][self.colunaAtualMapa] = '*'#
+                self.carregandoLixo = True
+                return PICK_UP 
+                
             if perception[1][1] == EMPTY:
                 self.mapa[self.linhaAtualMapa][self.colunaAtualMapa] = ' '
             ## Mapeando possiveis paredes no mapa e inserindo no MAPA!
 
             if perception[0][1] == WALL: # Verificando se tem uma parede em cima dela!
-                self.mapa[self.linhaAtualMapa - 1][self.colunaAtualMapa] = 'P'
+                self.mapa[self.linhaAtualMapa - 1][self.colunaAtualMapa] = 'p'
             
             if perception[2][1] == WALL: # Verificando se tem parede abaixo dele!
-                self.mapa[self.linhaAtualMapa + 1][self.colunaAtualMapa] = 'P'
+                self.mapa[self.linhaAtualMapa + 1][self.colunaAtualMapa] = 'p'
             
             if perception[1][0] == WALL: # Verificando se tem parede na esquerda dele!
-                self.mapa[self.linhaAtualMapa][self.colunaAtualMapa - 1] = 'P'
+                self.mapa[self.linhaAtualMapa][self.colunaAtualMapa - 1] = 'p'
             
             if perception[1][2] == WALL: #Verificando se tem parede na direita dela!
-                self.mapa[self.linhaAtualMapa][self.colunaAtualMapa + 1] = 'P'
+                self.mapa[self.linhaAtualMapa][self.colunaAtualMapa + 1] = 'p'
 
-        # linhas = len(self.mapa)
-        # colunas = len(self.mapa[0])
+    
         
-        a = np.array(self.mapa)
+        a = np.array(self.mapa) #Mapeando mapa em txt
         mat = np.matrix(a)
         with open('mapa.txt','wb') as f:
             for line in mat:
@@ -216,18 +228,22 @@ class Brain:
 
         if(movimentoCarrinhoSorteado == 1):
             self.linhaAtualMapa = self.linhaAtualMapa + 1
+            self.pilhaMovimentos.append(DOWN)
             return UP
         
         elif(movimentoCarrinhoSorteado == 2):
             self.linhaAtualMapa = self.linhaAtualMapa - 1
+            self.pilhaMovimentos.append(UP)
             return DOWN
         
         elif(movimentoCarrinhoSorteado == 3):
             self.colunaAtualMapa = self.colunaAtualMapa - 1
+            self.pilhaMovimentos.append(RIGHT)
             return LEFT
         
         elif(movimentoCarrinhoSorteado == 4):
             self.colunaAtualMapa = self.colunaAtualMapa + 1
+            self.pilhaMovimentos.append(LEFT)
             return RIGHT
 
 class Brain2:
